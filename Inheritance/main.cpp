@@ -20,6 +20,8 @@ class Student : Human
 
 int main()
 {
-    Student Oleg;
-    Oleg.set_age(22);
+    setlocale(LC_ALL, "");
+
+    //Student Oleg;
+    //Oleg.set_age(22);
 }
