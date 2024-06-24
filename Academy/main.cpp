@@ -220,11 +220,11 @@ public:
 	}
 };
 
-std::ostream& operator<<(std::ostream& os, const Human& obj)
-{
-	obj.info();
-	return os;
-}
+//std::ostream& operator<<(std::ostream& os, const Human& obj)
+//{
+//	obj.info();
+//	return os;
+//}
 
 //#define INHERITANCE_CHECK
 
@@ -261,6 +261,7 @@ int main()
 		cout << *group[i] << endl; 
 		cout << delimiter << endl;
 	}
+
 	for (int i = 0; i < sizeof(group) / sizeof(group[0]); i++)
 	{
 		//group[i]->~Human(); //при отработке почему-то остается age и пустой объект
