@@ -171,7 +171,13 @@ public:
 	{
 		cout << "TDestructor:\t" << this << endl;
 	}
-
+	//			Operators:
+	//std::ostream& operator<<(std::ostream& os, Teacher obj)
+	//std::ostream& operator<<(std::ostream& os)
+	//{
+	//	cout << speciality << ", " << experience << " years" << endl;
+	//	return os;
+	//}
 	//			Methods:
 
 	void info()const
@@ -180,6 +186,66 @@ public:
 		cout << speciality << ", " << experience << " years" << endl;
 	}
 };
+
+class Graduate : public Human
+{
+	string speciality;
+	double rating;
+	string year_of_graduation;
+public:
+	const string& get_speciality()const
+	{
+		return speciality;
+	}
+	const double get_rating()const
+	{
+		return rating;
+	}
+	const string& get_year_of_graduation()const
+	{
+		return year_of_graduation;
+	}
+	void set_speciality(const string& speciality)
+	{
+		this->speciality = speciality;
+	}
+	void set_rating(const double rating)
+	{
+		this->rating = rating;
+	}
+	void set_year_of_graduation(const string& year_of_graduation)
+	{
+		this->year_of_graduation = year_of_graduation;
+	}
+	//			Constructors:
+	Graduate
+	(
+		const string& last_name, const string& first_name, const unsigned int age,
+		const string& speciality, double rating, const string& year_of_graduation
+	) :Human(last_name, first_name, age)
+	{
+		this->speciality = speciality;
+		this->rating = rating;
+		this->year_of_graduation = year_of_graduation;
+		cout << "GConstructor:\t" << this << endl;
+	}
+	~Graduate()
+	{
+		cout << "GDestructor:\t" << this << endl;
+	}
+	//			Methods:
+	void info()const //override
+	{
+		Human::info();
+		cout << speciality << " " << rating << ", " << year_of_graduation << endl;
+	}
+};
+
+std::ostream& operator<<(std::ostream& os, const Human& obj)
+{
+	obj.info();
+	return os;
+}
 
 //#define INHERITANCE_CHECK
 
@@ -196,19 +262,24 @@ int main()
 	Teacher teacher("White", "Walter", 54, "Chemistry", 25);
 	teacher.info();
 #endif // INHERITANCE_CHECK
-	
 	//	Generalization:
+	//int* arr = new int[3] {1, 2, 3}; //про указатель на group
+	//зачем использовать override, если ничего не меняется
+	//если не объявлять метод info константным, он не отработает (виртуальность), но если объявить, то будет
 	Human* group[] =
 	{
 		new Student("Novikova", "Olga", 38, "College", "A", 5.0, 5.0),
 		new Teacher("White", "Walter", 54, "Chemistry", 25),
-		new Student("Ivanov", "Ivan", 25, "Math", "5 B", 97, 98)
+		new Student("Ivanov", "Ivan", 25, "Math", "5-в", 97, 98),
+		new Graduate("Алексеевна" , "София Августа Фредерика Ангальт-Цербстская", 14, "International languages", 95, "1743")
 	};
 
 	cout << delimiter << endl;
 	for (int i = 0; i < sizeof(group) / sizeof(group[0]); i++)
 	{
-		group[i]->info();
+		//group[i]->info();
+		cout << *group[i] << endl; 
+		group[i]->~Human(); //при отработке почему-то остается age и пустой объект
 		cout << delimiter << endl;
 	}
 }
