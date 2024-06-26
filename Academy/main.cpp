@@ -250,10 +250,9 @@ std::ostream& operator<<(std::ostream& os, const Human& obj)
 	return os;
 }
 
-void save(const string& path, Human* group[], int size)
+void Save(Human* group[], const int size, const string& path)
 {
-	ofstream fout;
-	fout.open(path);
+	ofstream fout(path);
 	if (!fout.is_open())
 		cout << "Ошибка открытия файла" << endl;
 	else
@@ -268,8 +267,10 @@ void save(const string& path, Human* group[], int size)
 		}
 	}
 	fout.close();
+	string cmd = "notepad " + path;
+	system(cmd.c_str()); //метод c_str() возвращает содержимое объекта string в виде обычной C-string (NULL terminated line)
 }
-void load(const string& path)
+void Load(const string& path)
 {
 	//std::istream& operator>>(std::istream & is, Fraction & obj)
 
@@ -291,10 +292,10 @@ void load(const string& path)
 
 	//		2 способ: создание объектов из данных в файле (данные нужно упорядочить, убрать y/o)
 
-	getline(fin, line);
+	getline(fin, line); //getline читает до "\n", делимитеры можно указать
 	//char* buffer = line.data();
 	char* buffer = new char[line.size() + 1] {};
-	strcpy(buffer, line.c_str());
+	strcpy(buffer, line.c_str()); //fin.getline(buff, size)
 
 	string parameters[8]; //очень чувствительно к ошибкам (трансформация типов), поэтому load вызывать только после save
 	int n = 0;
@@ -318,7 +319,23 @@ void load(const string& path)
 	fin.close();
 }
 
+void Print(Human* group[], const int n)
+{
+	cout << delimiter << endl;
+	for (int i = 0; i < n; i++)
+	{
+		//group[i]->info();
+		cout << *group[i] << endl;
+		cout << delimiter << endl;
+	}
+}
+void Clear(Human* group[], const int n) //не работает sizeof, тк передается указатель, а не статический массив
+{
+	for (int i = 0; i < n; i++)
+		delete group[i];
+}
 //#define INHERITANCE_CHECK
+//#define FILES
 
 int main()
 {
@@ -334,11 +351,8 @@ int main()
 	teacher.info();
 #endif // INHERITANCE_CHECK
 	//int* arr = new int[3] {1, 2, 3}; //про указатель на group
-	//зачем использовать override, если ничего не меняется
-	//если не объявлять метод info константным, он не отработает (виртуальность), но если объявить, то будет
 
 	//Human human("Ivanov", "Ivan", 25);
-	//Student student("Novikova", "Olga", 38, "College", "A", 5.0, 5.0);
 	//cout << sizeof(human.age) << " " << sizeof(2500000000000000000) << delimiter;
 
 	//	Generalization:
@@ -352,13 +366,16 @@ int main()
 
 	string path = "class.txt";
 	//cin >> path;
-	
+
+#ifdef FILES
 	save(path, group, sizeof(group) / sizeof(group[0]));
 
 	cout << delimiter;
 
-	for (int i = 0; i < sizeof(group) / sizeof(group[0]); i++)
-		delete group[i];
-
 	load(path);
+#endif // FILES
+
+	Print(group, sizeof(group) / sizeof(group[0]));
+	Save(group, sizeof(group) / sizeof(group[0]), path);
+	Clear(group, sizeof(group) / sizeof(group[0]));
 }
