@@ -274,6 +274,7 @@ void load(const string& path)
 	//std::istream& operator>>(std::istream & is, Fraction & obj)
 
 	//		1 способ: просто чтение из файла
+
 	string line;
 	ifstream fin;
 	fin.open("class.txt");
@@ -286,29 +287,34 @@ void load(const string& path)
 			cout << line << endl;
 		}
 	}
+	cout << delimiter << endl;
 
 	//		2 способ: создание объектов из данных в файле (данные нужно упорядочить, убрать y/o)
 
-	const int SIZE = 64;
-	//char buffer[SIZE]{};
 	getline(fin, line);
-	char* buffer = line.data();
+	//char* buffer = line.data();
+	char* buffer = new char[line.size() + 1] {};
+	strcpy(buffer, line.c_str());
 
-	string parameters[8];
+	string parameters[8]; //очень чувствительно к ошибкам (трансформация типов), поэтому load вызывать только после save
 	int n = 0;
 	const char delimiters[] = " ,.";
-	for (char* pch = strtok(line.c_str(), delimiters); pch; pch = strtok(NULL, delimiters))
-		//функция strtok изменяет входную строку
+	for (char* pch = strtok(buffer, delimiters); pch; pch = strtok(NULL, delimiters))
 		parameters[n++] = pch;
 	for (int i = 0; i < n; i++) cout << parameters[i] << tab; cout << endl;
 
-	/*switch (n)
+	switch (n)
 	{
-	case 1: obj = Fraction(number[0]); break;
-	case 2: obj = Fraction(number[0], number[1]); break;
-	case 3: obj = Fraction(number[0], number[1], number[2]); break;
-	}*/
+		//что будет, если существует два класса с одинаковым количеством переменных, кого куда инициализировать
+	case 3:
+	case 5:
+	case 7:
+	case 8:
+	default:
+		cout << "Нарушена структура данных"; break;
+	}
 
+	delete[] buffer;
 	fin.close();
 }
 
