@@ -279,7 +279,7 @@ void Load(const string& path)
 	string line;
 	ifstream fin;
 	fin.open("class.txt");
-	if (!fin.is_open())
+	/*if (!fin.is_open())
 		cout << "Ошибка открытия файла" << endl;
 	else
 	{
@@ -288,14 +288,14 @@ void Load(const string& path)
 			cout << line << endl;
 		}
 	}
-	cout << delimiter << endl;
+	cout << delimiter << endl;*/
 
 	//		2 способ: создание объектов из данных в файле (данные нужно упорядочить, убрать y/o)
 
-	getline(fin, line); //getline читает до "\n", делимитеры можно указать
-	//char* buffer = line.data();
-	char* buffer = new char[line.size() + 1] {};
-	strcpy(buffer, line.c_str()); //fin.getline(buff, size)
+	getline(fin, line); 
+	char* buffer = new char[264] {};
+	//strcpy(buffer, line.c_str()); 
+	fin.getline(buffer, 264); //getline читает до "\n", делимитеры можно указать
 
 	string parameters[8]; //очень чувствительно к ошибкам (трансформация типов), поэтому load вызывать только после save
 	int n = 0;
@@ -323,17 +323,14 @@ void Print(Human* group[], const int n)
 {
 	cout << delimiter << endl;
 	for (int i = 0; i < n; i++)
-	{
-		//group[i]->info();
-		cout << *group[i] << endl;
-		cout << delimiter << endl;
-	}
+		cout << *group[i] << endl << delimiter << endl;
 }
 void Clear(Human* group[], const int n) //не работает sizeof, тк передается указатель, а не статический массив
 {
 	for (int i = 0; i < n; i++)
 		delete group[i];
 }
+
 //#define INHERITANCE_CHECK
 //#define FILES
 
