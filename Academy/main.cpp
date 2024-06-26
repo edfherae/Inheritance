@@ -1,7 +1,11 @@
-﻿#include <iostream>
-#include <string>
+﻿#define _CRT_SECURE_NO_WARNINGS
+
+#include <iostream>
+#include <string> 
+#include <fstream>
 using namespace std;
 
+#define tab "\t"
 #define delimiter "\n--------------------------------------------\n"
 
 #define HUMAN_TAKE_PARAMETERS   const string& last_name, const string& first_name, const unsigned int age
@@ -63,6 +67,11 @@ public:
 	virtual void info()const
 	{
 		cout << last_name << " " << first_name << ", " << age << " y/o" << endl;
+	}
+	virtual string data()const
+	{
+		char* buffer = new char[32] {};
+		return string(this->last_name + " " + this->first_name + ", " + _itoa(this->age, buffer, 10) + ". ");
 	}
 };
 
@@ -131,6 +140,11 @@ public:
 		Human::info();
 		cout << speciality << ", " << group << ", " << rating << ", " << attendance << endl;
 	}
+	string data()const override
+	{
+		char* buffer = new char[32] {};
+		return string(Human::data() + this->speciality + ", " + this->group + ", " + _itoa(this->rating, buffer, 10) + ", " + _itoa(this->attendance, buffer, 10));
+	}
 };
 
 class Teacher : public Human
@@ -185,6 +199,11 @@ public:
 		Human::info();
 		cout << speciality << ", " << experience << " years" << endl;
 	}
+	string data()const override
+	{
+		char* buffer = new char[32] {};
+		return string(Human::data() + this->speciality + ", " + _itoa(this->experience, buffer, 10));
+	}
 };
 
 class Graduate : public Student
@@ -218,13 +237,80 @@ public:
 		Student::info();
 		cout << subject << endl;
 	}
+	string data()const override
+	{
+		char* buffer = new char[32] {};
+		return string(Student::data() + ", " + this->subject);
+	}
 };
 
-//std::ostream& operator<<(std::ostream& os, const Human& obj)
-//{
-//	obj.info();
-//	return os;
-//}
+std::ostream& operator<<(std::ostream& os, const Human& obj)
+{
+	obj.info();
+	return os;
+}
+
+void save(const string& path, Human* group[], int size)
+{
+	ofstream fout;
+	fout.open(path);
+	if (!fout.is_open())
+		cout << "Ошибка открытия файла" << endl;
+	else
+	{
+		cout << delimiter << endl;
+		for (int i = 0; i < size; i++)
+		{
+			//group[i]->info();
+			cout << *group[i] << endl;
+			fout << group[i]->data() << "." << endl;
+			cout << delimiter << endl;
+		}
+	}
+	fout.close();
+}
+void load(const string& path)
+{
+	//std::istream& operator>>(std::istream & is, Fraction & obj)
+
+	//		1 способ: просто чтение из файла
+	string line;
+	ifstream fin;
+	fin.open("class.txt");
+	if (!fin.is_open())
+		cout << "Ошибка открытия файла" << endl;
+	else
+	{
+		while (getline(fin, line))
+		{
+			cout << line << endl;
+		}
+	}
+
+	//		2 способ: создание объектов из данных в файле (данные нужно упорядочить, убрать y/o)
+
+	const int SIZE = 64;
+	//char buffer[SIZE]{};
+	getline(fin, line);
+	char* buffer = line.data();
+
+	string parameters[8];
+	int n = 0;
+	const char delimiters[] = " ,.";
+	for (char* pch = strtok(line.c_str(), delimiters); pch; pch = strtok(NULL, delimiters))
+		//функция strtok изменяет входную строку
+		parameters[n++] = pch;
+	for (int i = 0; i < n; i++) cout << parameters[i] << tab; cout << endl;
+
+	/*switch (n)
+	{
+	case 1: obj = Fraction(number[0]); break;
+	case 2: obj = Fraction(number[0], number[1]); break;
+	case 3: obj = Fraction(number[0], number[1], number[2]); break;
+	}*/
+
+	fin.close();
+}
 
 //#define INHERITANCE_CHECK
 
@@ -245,26 +331,28 @@ int main()
 	//зачем использовать override, если ничего не меняется
 	//если не объявлять метод info константным, он не отработает (виртуальность), но если объявить, то будет
 
+	//Human human("Ivanov", "Ivan", 25);
+	//Student student("Novikova", "Olga", 38, "College", "A", 5.0, 5.0);
+	//cout << sizeof(human.age) << " " << sizeof(2500000000000000000) << delimiter;
+
 	//	Generalization:
 	Human* group[] =
 	{
 		new Student("Novikova", "Olga", 38, "College", "A", 5.0, 5.0),
 		new Teacher("White", "Walter", 54, "Chemistry", 25),
 		new Student("Ivanov", "Ivan", 25, "Math", "5-в", 97, 98),
-		new Graduate("Алексеевна" , "София Августа Фредерика Ангальт-Цербстская", 14, "International languages", "Alone", 99, 99, "Government management")
+		new Graduate("Алексеевна" , "София_Августа_Фредерика_Ангальт-Цербстская", 14, "International_languages", "Alone", 99, 99, "Government_management")
 	};
 
-	cout << delimiter << endl;
-	for (int i = 0; i < sizeof(group) / sizeof(group[0]); i++)
-	{
-		//group[i]->info();
-		cout << *group[i] << endl; 
-		cout << delimiter << endl;
-	}
+	string path = "class.txt";
+	//cin >> path;
+	
+	save(path, group, sizeof(group) / sizeof(group[0]));
+
+	cout << delimiter;
 
 	for (int i = 0; i < sizeof(group) / sizeof(group[0]); i++)
-	{
-		//group[i]->~Human(); //при отработке почему-то остается age и пустой объект
 		delete group[i];
-	}
+
+	load(path);
 }
