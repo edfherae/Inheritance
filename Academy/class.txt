@@ -1,5 +1,5 @@
 Ivanov Ivan, 25.
 Novikova Olga, 38. College, A, 5, 5.
 White Walter, 54. Chemistry, 25.
-Ivanov Ivan, 25. Math, 5-в, 97, 97.
-Алексеевна София_Августа_Фредерика_Ангальт-Цербстская, 14. International_languages, Alone, 99, 99, Government_management.
+Ivanov Ivan, 25. Math, 5-Гў, 97, 97.
+РђР»РµРєСЃРµРµРІРЅР° РЎРѕС„РёСЏ_РђРІРіСѓСЃС‚Р°_Р¤СЂРµРґРµСЂРёРєР°_РђРЅРіР°Р»СЊС‚-Р¦РµСЂР±СЃС‚СЃРєР°СЏ, 14. International_languages, Alone, 99, 99, Government_management.
