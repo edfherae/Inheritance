@@ -418,7 +418,7 @@ void Clear(Human* group[], const int n) //не работает sizeof, тк п�
 }
 
 //#define INHERITANCE_CHECK
-//#define FILES
+//#define POLYMORPHISM
 
 int main()
 {
@@ -433,12 +433,14 @@ int main()
 	Teacher teacher("White", "Walter", 54, "Chemistry", 25);
 	teacher.info();
 #endif // INHERITANCE_CHECK
+	
+#ifdef POLYMORPHISM
 	//int* arr = new int[3] {1, 2, 3}; //про указатель на group
 
-	//Human human("Ivanov", "Ivan", 25);
-	//cout << sizeof(human.age) << " " << sizeof(2500000000000000000) << delimiter;
+//Human human("Ivanov", "Ivan", 25);
+//cout << sizeof(human.age) << " " << sizeof(2500000000000000000) << delimiter;
 
-	//	Generalization:
+//	Generalization:
 	Human* group[] =
 	{
 		new Human("Ivanov", "Ivan", 25),
@@ -459,5 +461,7 @@ int main()
 	//Load(path, group2, SIZE);
 	//Print(group2, sizeof(group2) / sizeof(group2[0]));
 	Clear(group, sizeof(group) / sizeof(group[0]));
-	//Clear(group2, sizeof(group2) / sizeof(group2[0]));
+	//Clear(group2, sizeof(group2) / sizeof(group2[0]));  
+#endif // POLYMORPHISM
+
 }
