@@ -83,14 +83,14 @@ public:
 	}
 	virtual ostream& info(ostream& os)const
 	{
-		return os << last_name << " " << first_name << " " << age << " y/o";
+		return os << last_name << " " << first_name << " " << age << " y/o ";
 	}
 	virtual string data()const
 	{
 		char* buffer = new char[32] {};
 		return string(this->last_name + " " + this->first_name + ", " + _itoa(this->age, buffer, 10) + ". ");
 	}
-	virtual std::ofstream& info(ofstream& ofs)const
+	virtual std::ofstream& write(ofstream& ofs)const
 	{
 		//ofs << strchr(typeid(*this).name(), ' ') + 1 << ":\t" << last_name << " " << first_name << " " << age;
 		ofs.width(HUMAN_TYPE_WIDTH);ofs << left << string(strchr(typeid(*this).name(), ' ') + 1) + ":";
@@ -98,6 +98,11 @@ public:
 		ofs.width(FIRST_NAME_WIDTH);ofs << left << first_name;
 		ofs.width(AGE_WIDTH);		ofs << left << age;
 		return ofs;
+	}
+	virtual ifstream& read(ifstream& ifs)
+	{
+		ifs >> last_name >> first_name >> age;
+		return ifs;
 	}
 };
 
@@ -107,7 +112,11 @@ std::ostream& operator<<(std::ostream& os, const Human& obj)
 }
 ofstream& operator<<(ofstream& ofs, const Human& obj)
 {
-	return obj.info(ofs);
+	return obj.write(ofs);
+}
+ifstream& operator>>(ifstream& is, Human& obj)
+{
+	return obj.read(is);
 }
 
 #define STUDENT_TAKE_PARAMETERS const string& speciality, const string& group, const double rating, const double attendance
@@ -184,19 +193,34 @@ public:
 	{
 		return Human::info(os) << speciality << " " << group << " " << rating << " " << attendance;
 	}
-	ofstream& info(ofstream& ofs)const override
+	ofstream& write(ofstream& ofs)const override
 	{
-		Human::info(ofs);
+		Human::write(ofs);
 		ofs.width(SPECIALITY_WIDTH); ofs << speciality;
 		ofs.width(GROUP_WIDTH);		 ofs << group;
 		ofs.width(RATING_WIDTH);	 ofs << rating;
 		ofs.width(ATTENDANCE_WIDTH); ofs << attendance;
 		return ofs;
 	}
-	string data()const override
+	ifstream& read(ifstream& ifs)override
 	{
-		char* buffer = new char[32] {};
-		return string(Human::data() + this->speciality + ", " + this->group + ", " + _itoa(this->rating, buffer, 10) + ", " + _itoa(this->attendance, buffer, 10));
+		Human::read(ifs);
+		//char symbol;
+		//string buffer;
+		//for (int i = 0; i < SPECIALITY_WIDTH /*buffer[i] != ' '*/; i++)
+		//{
+		//	ifs.get(symbol);
+		//	buffer += symbol;
+		//}
+		//speciality = buffer;
+		//ifs >> group >> rating >> attendance;
+		char buffer[SPECIALITY_WIDTH]{};
+		ifs.read(buffer, SPECIALITY_WIDTH);
+		for (int i = SPECIALITY_WIDTH - 1; buffer[i] == ' '; i--)buffer[i] = 0; /*если buffer[i] == " " кавычки, то сравниваются адреса*/
+		while (buffer[0] == ' ')for (int i = 0; buffer[i]; i++)buffer[i] = buffer[i + 1];
+		this->speciality = buffer;
+		ifs >> group >> rating >> attendance;
+		return ifs;
 	}
 };
 
@@ -257,19 +281,33 @@ public:
 	}
 	ostream& info(ostream& os)const override
 	{
-		return Human::info(os) << " " << speciality << " " << experience << " years";
+		return Human::info(os) << speciality << " " << experience << " years";
 	}
-	ofstream& info(ofstream& ofs)const override
+	ofstream& write(ofstream& ofs)const override
 	{
-		Human::info(ofs);
+		Human::write(ofs);
 		ofs.width(SPECIALITY_WIDTH); ofs << speciality;
 		ofs.width(EXPERIENCE_WIDTH); ofs << experience;
 		return ofs;
 	}
-	string data()const override
+	ifstream& read(ifstream& ifs)override
 	{
-		char* buffer = new char[32] {};
-		return string(Human::data() + this->speciality + ", " + _itoa(this->experience, buffer, 10));
+		Human::read(ifs);
+		//ifs >> speciality >> experience;
+		const int SIZE = SPECIALITY_WIDTH;
+		char buffer[SIZE] {};
+		ifs.read(buffer, SIZE); //f12, передаем char*
+		int pos = strrchr(buffer, ' ') - buffer; //нашли, где находится 0 (?) 
+												 //strrchr (string reverse character) - находит последнее вхождение указанного символа в указанной строке, strR - reverse
+		//buffer[pos] = 0;
+		for (int i = SIZE - 1; buffer[i] == ' '; i--)buffer[i] = 0; //0 и есть детерминирующий ноль
+		while (buffer[0] == ' ')
+		{
+			for (int i = 0; buffer[i]; i++)buffer[i] = buffer[i + 1]; //циклический сдвиг массива, двигаем массив, пока не затрём пробел
+		}
+		this->speciality = buffer;
+		ifs >> experience;
+		return ifs;
 	}
 };
 
@@ -310,16 +348,17 @@ public:
 	{
 		return Student::info(os) << " " << subject;
 	}
-	ofstream& info(ofstream& ofs)const override
+	ofstream& write(ofstream& ofs)const override
 	{
-		Student::info(ofs);
+		Student::write(ofs);
 		ofs.width(SUBJECT_WIDTH); ofs << subject;
 		return ofs;
 	}
-	string data()const override
+	ifstream& read(ifstream& ifs)override
 	{
-		char* buffer = new char[32] {};
-		return string(Student::data() + ", " + this->subject);
+		Student::read(ifs);
+		getline(ifs, subject);
+		return ifs;
 	}
 };
 
@@ -344,67 +383,128 @@ void Save(Human* group[], const int size, const string& path)
 	string cmd = "notepad " + path;
 	system(cmd.c_str()); //метод c_str() возвращает содержимое объекта string в виде обычной C-string (NULL terminated line)
 }
-void Load(const string& path, Human* group[], const int SIZE)
+//void Load(const string& path, Human* group[], const int SIZE)
+//{
+//	ifstream fin;
+//	fin.open(path);
+//
+//	//		1 способ: просто чтение из файла
+//
+//	/*string line;
+//
+//	if (!fin.is_open())
+//		cout << "Ошибка открытия файла" << endl;
+//	else
+//	{
+//		while (getline(fin, line))
+//		{
+//			cout << line << endl;
+//		}
+//	}
+//	cout << delimiter << endl;*/
+//
+//	//		2 способ: создание объектов из данных в файле (данные нужно упорядочить, убрать y/o)
+//
+//	char* buffer = new char[264] {};
+//	Human* obj = nullptr;
+//	int human_count = 0;
+//
+//	for(int i = 0; i < SIZE; i++)
+//	{
+//		fin.getline(buffer, 264); //getline читает до "\n", разделители можно указать
+//		string parameters[8];	//максимум параметров - 8, по количеству параметров определяется тип (уязвимо)
+//								//очень чувствительно к ошибкам (трансформация типов, параметры должны быть на своем месте), поэтому load вызывать только после save
+//		int n = 0;
+//		const char delimiters[] = " ,.";
+//		for (char* pch = strtok(buffer, delimiters); pch; pch = strtok(NULL, delimiters))
+//			parameters[n++] = pch;
+//		for (int j = 0; j < n; j++) cout << parameters[j] << tab; cout << endl;
+//
+//		switch (n) //нечитаемо, доработать
+//		{
+//			//что будет, если существует два класса с одинаковым количеством переменных, кого куда тогда инициализировать?
+//		case tHuman:
+//			obj = new Human(parameters[0], parameters[1], stoi(parameters[2])); break;
+//		case tTeacher:
+//			obj = new Teacher(parameters[0], parameters[1], stoi(parameters[2]), parameters[3], stoi(parameters[4])); break;
+//		case tStudent:
+//			obj = new Student(parameters[0], parameters[1], stoi(parameters[2]), parameters[3], parameters[4], stod(parameters[5]), stod(parameters[6])); break;
+//		case tGraduate:
+//			obj = new Graduate(parameters[0], parameters[1], stoi(parameters[2]), parameters[3], parameters[4], stod(parameters[5]), stod(parameters[6]), parameters[7]); break;
+//		default:
+//			cout << "Нарушена структура данных (или это пустая строка)\n"; 
+//			obj = new Human("", "", 0); //чтобы не было ошибок при использовании Print для null
+//			break;
+//		}
+//		group[human_count++] = obj;
+//		obj = nullptr;
+//	}
+//
+//	delete[] buffer;
+//	fin.close();
+//}
+Human* HumanFactory(const std::string& type)
 {
-	ifstream fin;
-	fin.open(path);
-
-	//		1 способ: просто чтение из файла
-
-	/*string line;
-
-	if (!fin.is_open())
-		cout << "Ошибка открытия файла" << endl;
-	else
-	{
-		while (getline(fin, line))
-		{
-			cout << line << endl;
-		}
-	}
-	cout << delimiter << endl;*/
-
-	//		2 способ: создание объектов из данных в файле (данные нужно упорядочить, убрать y/o)
-
-	char* buffer = new char[264] {};
-	Human* obj = nullptr;
-	int human_count = 0;
-
-	for(int i = 0; i < SIZE; i++)
-	{
-		fin.getline(buffer, 264); //getline читает до "\n", разделители можно указать
-		string parameters[8];	//максимум параметров - 8, по количеству параметров определяется тип (уязвимо)
-								//очень чувствительно к ошибкам (трансформация типов, параметры должны быть на своем месте), поэтому load вызывать только после save
-		int n = 0;
-		const char delimiters[] = " ,.";
-		for (char* pch = strtok(buffer, delimiters); pch; pch = strtok(NULL, delimiters))
-			parameters[n++] = pch;
-		for (int j = 0; j < n; j++) cout << parameters[j] << tab; cout << endl;
-
-		switch (n) //нечитаемо, доработать
-		{
-			//что будет, если существует два класса с одинаковым количеством переменных, кого куда тогда инициализировать?
-		case tHuman:
-			obj = new Human(parameters[0], parameters[1], stoi(parameters[2])); break;
-		case tTeacher:
-			obj = new Teacher(parameters[0], parameters[1], stoi(parameters[2]), parameters[3], stoi(parameters[4])); break;
-		case tStudent:
-			obj = new Student(parameters[0], parameters[1], stoi(parameters[2]), parameters[3], parameters[4], stod(parameters[5]), stod(parameters[6])); break;
-		case tGraduate:
-			obj = new Graduate(parameters[0], parameters[1], stoi(parameters[2]), parameters[3], parameters[4], stod(parameters[5]), stod(parameters[6]), parameters[7]); break;
-		default:
-			cout << "Нарушена структура данных (или это пустая строка)\n"; 
-			obj = new Human("NULL", "NULL", 0); //чтобы не было ошибок при использовании Print для null
-			break;
-		}
-		group[human_count++] = obj;
-		obj = nullptr;
-	}
-
-	delete[] buffer;
-	fin.close();
+	Human* human = nullptr;
+	if (type == "Human:") human = new Human("", "", 0);
+	if (type == "Student:") human = new Student("", "", 0, "", "", 0, 0);
+	if (type == "Teacher:") human = new Teacher("", "", 0, "", 0);
+	if (type == "Graduate:") human = new Graduate("", "", 0, "", "", 0, 0, "");
+	return human;
 }
+Human** Load(const string& filename, int& n)
+{
+	Human** group = nullptr;
+	ifstream fin(filename);
 
+	cout << fin.tellg() << endl;
+	if (fin.is_open())
+	{
+		//1) считаем количество объектов, оно точно соответствует количеству не пумтых строк в файле
+		n = 0;
+		while (!fin.eof())
+		{
+			//const int SIZE = 256;
+			//char* buffer[SIZE] {}; //статический массив на SIZE элементов
+			//fin.getline(buffer, size); //for NULL-terminated lines (C-Strings - char arrays)
+
+			string buffer;
+			getline(fin, buffer);		 //for string global function getline(stream, string) used;
+			if (buffer.size() < 16)continue;
+			n++;
+		}
+		cout << "Количество строк в файле: " << n << endl;
+
+		//2) выделяем память под массив
+		group = new Human*[n] {};
+
+		//3) Возвращаемся в начало файла
+		cout << fin.tellg() << endl;
+		fin.clear();  //clear() resets the error flags on a stream(as you can read in the documentation).If you use formatted extraction, then the error flag "fail" will be set if an extraction fails(e.g. if you're trying to read an integer and there isn't anything parsable).So if you're using the error state to terminate the loop, you have to make the stream usable again before going into the next loop.
+					  //https://stackoverflow.com/questions/8079333/what-does-clear-do
+		fin.seekg(0); // изменение позиции курсора с -1 на 0
+		cout << fin.tellg() << endl;
+
+		//4)  выполняем чтение объектов
+
+		for (int i = 0; i < n; i++)
+		{
+			string type;
+			cout << fin.tellg() << endl;
+			fin >> type;
+			cout << fin.tellg() << endl; //tellg - позиция в файле, не в строке
+			group[i] = HumanFactory(type);
+			if (group[i])fin >> *group[i];
+			else continue;
+		}
+
+		fin.close();
+	}
+	else
+		cerr << "Error: File not found!" << endl;
+
+	return group;
+}
 void Print(Human* group[], const int n)
 {
 	cout << delimiter << endl;
@@ -423,6 +523,7 @@ void Clear(Human* group[], const int n) //не работает sizeof, тк п�
 int main()
 {
 	setlocale(LC_ALL, "");
+
 #ifdef INHERITANCE_CHECK
 	Human human("Ivanov", "Ivan", 25);
 	human.info();
@@ -464,4 +565,8 @@ int main()
 	//Clear(group2, sizeof(group2) / sizeof(group2[0]));  
 #endif // POLYMORPHISM
 
+	int size = 0;
+	Human** group = Load("class.txt", size);
+	Print(group, size);
+	Clear(group, size);
 }
